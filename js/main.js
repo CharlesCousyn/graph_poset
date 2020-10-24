@@ -1,6 +1,6 @@
 let fileJSON;
 let loadedConfig;
-let myChart;
+let graph;
 
 window.addEventListener("load",() =>
 {
@@ -39,7 +39,7 @@ window.addEventListener("load",() =>
 
 function updateSelectActivity(fileJson)
 {
-    console.log(fileJson)
+    console.log("fileJson", fileJson);
     //Update select criterion to sort
     const selectActivity = document.getElementById("selectActivity");
     let optionsHTMLActivity= ["<option value='' selected disabled hidden>Choose activity</option>", ...fileJson.map(obj => `<option${name === 0 ? " selected" : ""} value='${obj.activityName}'> ${obj.activityName}</option>`)];
@@ -48,42 +48,91 @@ function updateSelectActivity(fileJson)
 
 function numPOSETtoGraphJSON(activityRes)
 {
-    console.log(activityRes);
     let nodes = activityRes.numPOSET._elementsIds.map((id, index) =>
     {
-        return {id: index, caption: id};
+        return {id: id, label: id, index: index};
     });
-    console.log(nodes);
 
-    let edges = activityRes.numPOSET._matrix.map((line, indexLine) =>
+
+    let edges = activityRes.numPOSET._matrix.flatMap((line, indexLine) =>
         line.map((value, indexCol) =>
         {
-            if(value !== 0)
+            if(value !== 0 && value !== null)
             {
                 return {
-                    source: indexLine,
-                    target: indexCol,
-                    caption: value
+                    source: nodes[indexLine].id,
+                    target: nodes[indexCol].id,
+                    label: value,
+                    indexSource: indexLine,
+                    indexTarget: indexCol,
+                    relatedness: value,
+                    style: {
+                        endArrow: true,
+                        startArrow: false,
+                        lineWidth: 3 + value*0.75,
+                        opacity: 0.6
+                    }
                 };
             }
-        }));
+            return undefined;
+        })
+        .filter(value => value !== undefined));
 
-    console.log(edges);
 
-    return {
-        comments: "GraphTest", nodes, edges: []
+
+    //Cut the graph, limit the number of nodes
+    let limit = 4000;
+    nodes = nodes.filter(node => node.index < limit);
+    edges = edges.filter(edge => edge.indexSource < limit && edge.indexTarget < limit);
+
+
+    let data = {
+        comments: "GraphTest", nodes, edges
     };
+
+    console.log("data", data);
+    return data;
 }
 
 function loadGraph(data)
 {
-    let config = {
-        dataSource: data,
-        forceLocked: false,
-        graphHeight: function(){ return 700; },
-        graphWidth: function(){ return 700; },
-        linkDistance: function(){ return 40; },
-        directedEdges: true
-    };
-    alchemy.begin(config);
+    graph = new G6.Graph({
+        container: 'canvasContainer', // String | HTMLElement, required, the id of DOM element or an HTML node
+        width: 1000, // Number, required, the width of the graph
+        height: 600, // Number, required, the height of the graph,
+        //fitView: true,
+        //fitViewPadding: [20, 40, 50, 20],
+        layout: {                // Object, layout configuration. random by default
+            type: 'force',         // Force layout
+            preventOverlap: true,  // Prevent node overlappings
+            linkDistance: 300,
+            },
+        defaultNode:
+            {
+                type: 'circle',
+                color: '#5366d6',
+                size: [50],
+                labelCfg: {
+                    style: {
+                        fill: '#000000',
+                        fontSize: 20,
+                    }
+                }
+            },
+        defaultEdge:
+            {
+                type: 'quadratic',
+                style: {
+                    endArrow: true,
+                    startArrow: false,
+                    lineWidth: 4
+                }
+            },
+        modes: {
+            default: ['drag-canvas', 'zoom-canvas', 'drag-node'], // Allow users to drag canvas, zoom canvas, and drag nodes
+        },
+    });
+
+    graph.data(data); // Load the data defined in Step 2
+    graph.render(); // Render the graph
 }
