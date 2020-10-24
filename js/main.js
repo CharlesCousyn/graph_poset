@@ -2,6 +2,12 @@ let fileJSON;
 let loadedConfig;
 let graph;
 
+let GENERAL_CONFIG =
+    {
+        cuttingGraphLimit: 25,
+        substractingEdges: false
+    };
+
 window.addEventListener("load",() =>
 {
     document.getElementById('loadFileButton')
@@ -54,22 +60,35 @@ function numPOSETtoGraphJSON(activityRes)
     });
 
 
-    let edges = activityRes.numPOSET._matrix.flatMap((line, indexLine) =>
+    let edges = activityRes.numPOSET._matrix.flatMap((line, indexLine, arr) =>
         line.map((value, indexCol) =>
         {
-            if(value !== 0 && value !== null)
+            //Computing edge value
+            let valueEdge = 0;
+            if(GENERAL_CONFIG.substractingEdges)
+            {
+                let symValue = arr[indexCol][indexLine];
+                valueEdge = value - symValue;
+            }
+            else
+            {
+                valueEdge = value;
+            }
+
+            //Choosing if there's an edge or not
+            if(valueEdge > 0 && value !== null)
             {
                 return {
                     source: nodes[indexLine].id,
                     target: nodes[indexCol].id,
-                    label: value,
+                    label: valueEdge,
                     indexSource: indexLine,
                     indexTarget: indexCol,
-                    relatedness: value,
+                    relatedness: valueEdge,
                     style: {
                         endArrow: true,
                         startArrow: false,
-                        lineWidth: 3 + value*0.75,
+                        lineWidth: 3 + valueEdge*0.75,
                         opacity: 0.6
                     }
                 };
@@ -78,12 +97,9 @@ function numPOSETtoGraphJSON(activityRes)
         })
         .filter(value => value !== undefined));
 
-
-
     //Cut the graph, limit the number of nodes
-    let limit = 4000;
-    nodes = nodes.filter(node => node.index < limit);
-    edges = edges.filter(edge => edge.indexSource < limit && edge.indexTarget < limit);
+    nodes = nodes.filter(node => node.index < GENERAL_CONFIG.cuttingGraphLimit);
+    edges = edges.filter(edge => edge.indexSource < GENERAL_CONFIG.cuttingGraphLimit && edge.indexTarget < GENERAL_CONFIG.cuttingGraphLimit);
 
 
     let data = {
