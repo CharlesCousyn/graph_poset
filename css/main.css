@@ -1,0 +1,49 @@
+*
+{
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+}
+
+#pageContainer
+{
+    display: grid;
+    /*grid-template-columns: 1fr;*/
+    grid-template-areas:
+            "titleContainer"
+            "canvasContainer"
+            "canvasContainer"
+            "canvasContainer"
+            "dataLoadingContainer";
+}
+
+#titleContainer
+{
+    grid-area: titleContainer;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    background-color: dodgerblue;
+    padding: 20px;
+    box-shadow:
+            0 2px 5px 0 rgba(0,0,0,0.16),
+            0 2px 10px 0 rgba(0,0,0,0.12);
+}
+
+#canvasContainer
+{
+    grid-area: canvasContainer;
+    padding: 20px 200px;
+    box-shadow:
+            0 2px 5px 0 rgba(0,0,0,0.16),
+            0 2px 10px 0 rgba(0,0,0,0.12);
+}
+
+#dataLoadingContainer
+{
+    grid-area: dataLoadingContainer;
+    padding: 15px;
+    box-shadow:
+            0 2px 5px 0 rgba(0,0,0,0.16),
+            0 2px 10px 0 rgba(0,0,0,0.12);
+}
