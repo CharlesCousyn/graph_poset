@@ -97,6 +97,9 @@ function numPOSETtoGraphJSON(activityRes)
         })
         .filter(value => value !== undefined));
 
+    console.log("nodes", nodes);
+    console.log("edges", edges);
+
     //Cut the graph, limit the number of nodes
     nodes = nodes.filter(node => node.index < GENERAL_CONFIG.cuttingGraphLimit);
     edges = edges.filter(edge => edge.indexSource < GENERAL_CONFIG.cuttingGraphLimit && edge.indexTarget < GENERAL_CONFIG.cuttingGraphLimit);
@@ -112,42 +115,45 @@ function numPOSETtoGraphJSON(activityRes)
 
 function loadGraph(data)
 {
-    graph = new G6.Graph({
-        container: 'canvasContainer', // String | HTMLElement, required, the id of DOM element or an HTML node
-        width: 1000, // Number, required, the width of the graph
-        height: 600, // Number, required, the height of the graph,
-        //fitView: true,
-        //fitViewPadding: [20, 40, 50, 20],
-        layout: {                // Object, layout configuration. random by default
-            type: 'force',         // Force layout
-            preventOverlap: true,  // Prevent node overlappings
-            linkDistance: 300,
+    if(graph === undefined)
+    {
+        graph = new G6.Graph({
+            container: 'canvasContainer', // String | HTMLElement, required, the id of DOM element or an HTML node
+            width: 1000, // Number, required, the width of the graph
+            height: 600, // Number, required, the height of the graph,
+            //fitView: true,
+            //fitViewPadding: [20, 40, 50, 20],
+            layout: {                // Object, layout configuration. random by default
+                type: 'force',         // Force layout
+                preventOverlap: true,  // Prevent node overlappings
+                linkDistance: 300,
             },
-        defaultNode:
-            {
-                type: 'circle',
-                color: '#5366d6',
-                size: [50],
-                labelCfg: {
-                    style: {
-                        fill: '#000000',
-                        fontSize: 20,
+            defaultNode:
+                {
+                    type: 'circle',
+                    color: '#5366d6',
+                    size: [50],
+                    labelCfg: {
+                        style: {
+                            fill: '#000000',
+                            fontSize: 20,
+                        }
                     }
-                }
+                },
+            defaultEdge:
+                {
+                    type: 'quadratic',
+                    style: {
+                        endArrow: true,
+                        startArrow: false,
+                        lineWidth: 4
+                    }
+                },
+            modes: {
+                default: ['drag-canvas', 'zoom-canvas', 'drag-node'], // Allow users to drag canvas, zoom canvas, and drag nodes
             },
-        defaultEdge:
-            {
-                type: 'quadratic',
-                style: {
-                    endArrow: true,
-                    startArrow: false,
-                    lineWidth: 4
-                }
-            },
-        modes: {
-            default: ['drag-canvas', 'zoom-canvas', 'drag-node'], // Allow users to drag canvas, zoom canvas, and drag nodes
-        },
-    });
+        });
+    }
 
     graph.data(data); // Load the data defined in Step 2
     graph.render(); // Render the graph
