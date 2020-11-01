@@ -4,7 +4,7 @@ let graph;
 
 let GENERAL_CONFIG =
     {
-        cuttingGraphLimit: 25,
+        cuttingGraphLimit: 100000,
         substractingEdges: false
     };
 
@@ -29,8 +29,7 @@ window.addEventListener("load",() =>
                     selectActivity.addEventListener("change",
                         () =>
                         {
-                            loadedConfig = fileJSON.find(activityResult => activityResult.activityName === selectActivity.options[selectActivity.selectedIndex].value);
-                            //updateSelectActivity(loadedConfig);
+                            loadedConfig = fileJSON.find(activityResult => activityResult._activityName === selectActivity.options[selectActivity.selectedIndex].value);
 
                             console.log("loadedConfig", loadedConfig);
                             loadGraph(numPOSETtoGraphJSON(loadedConfig));
@@ -48,19 +47,19 @@ function updateSelectActivity(fileJson)
     console.log("fileJson", fileJson);
     //Update select criterion to sort
     const selectActivity = document.getElementById("selectActivity");
-    let optionsHTMLActivity= ["<option value='' selected disabled hidden>Choose activity</option>", ...fileJson.map(obj => `<option${name === 0 ? " selected" : ""} value='${obj.activityName}'> ${obj.activityName}</option>`)];
+    let optionsHTMLActivity= ["<option value='' selected disabled hidden>Choose activity</option>", ...fileJson.map(obj => `<option${name === 0 ? " selected" : ""} value='${obj._activityName}'> ${obj._activityName}</option>`)];
     selectActivity.innerHTML = optionsHTMLActivity.join("");
 }
 
 function numPOSETtoGraphJSON(activityRes)
 {
-    let nodes = activityRes.numPOSET._elementsIds.map((id, index) =>
+    let nodes = activityRes._numPOSET._elementsIds.map((id, index) =>
     {
         return {id: id, label: id, index: index};
     });
 
 
-    let edges = activityRes.numPOSET._matrix.flatMap((line, indexLine, arr) =>
+    let edges = activityRes._numPOSET._matrix.flatMap((line, indexLine, arr) =>
         line.map((value, indexCol) =>
         {
             //Computing edge value
