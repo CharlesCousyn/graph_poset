@@ -32,7 +32,7 @@ window.addEventListener("load",() =>
                             loadedConfig = fileJSON.find(activityResult => activityResult._activityName === selectActivity.options[selectActivity.selectedIndex].value);
 
                             console.log("loadedConfig", loadedConfig);
-                            loadGraph(numPOSETtoGraphJSON(loadedConfig));
+                            loadGraph(graphAdjListToGraphJSON(loadedConfig));
                         });
                 };
 
@@ -95,6 +95,77 @@ function numPOSETtoGraphJSON(activityRes)
             return undefined;
         })
         .filter(value => value !== undefined));
+
+    console.log("nodes", nodes);
+    console.log("edges", edges);
+
+    //Cut the graph, limit the number of nodes
+    nodes = nodes.filter(node => node.index < GENERAL_CONFIG.cuttingGraphLimit);
+    edges = edges.filter(edge => edge.indexSource < GENERAL_CONFIG.cuttingGraphLimit && edge.indexTarget < GENERAL_CONFIG.cuttingGraphLimit);
+
+
+    let data = {
+        comments: "GraphTest", nodes, edges
+    };
+
+    console.log("data", data);
+    return data;
+}
+
+function graphAdjListToGraphJSON(activityRes)
+{
+    let nodes = activityRes._graphAdjList._adjList.map(([idNode, map], index) => ({id: idNode, label: idNode, index: index}));
+
+    let edges = activityRes._graphAdjList._adjList.flatMap(([idNode, map], index, arr) =>
+    {
+        let from = idNode;
+
+        return map.map(([idNode1, weight], index1) =>
+        {
+            let weightEdge = 0;
+            let to = idNode1;
+
+            if(GENERAL_CONFIG.substractingEdges)
+            {
+                let symValue = 0;
+                let [idNode2, map2] = arr.find(el => el[0] === to);
+
+                if([idNode2, map2]  !== undefined)
+                {
+                    let [idNode3, weightFound] = map2.find(el => el[0] === from);
+                    if([idNode3, weightFound]  !== undefined)
+                    {
+                        symValue = weightFound;
+                    }
+                }
+                weightEdge = weight - symValue;
+            }
+            else
+            {
+                weightEdge = weight;
+            }
+
+            //Choosing if there's an edge or not
+            if(weightEdge > 0 && weightEdge !== null)
+            {
+                return {
+                    source: from,
+                    target: to,
+                    label: weightEdge,
+                    relatedness: weightEdge,
+                    indexSource: index,
+                    indexTarget: index1,
+                    style: {
+                        endArrow: true,
+                        startArrow: false,
+                        lineWidth: 3 + weightEdge * 0.75,
+                        opacity: 0.6
+                    }
+                };
+            }
+        });
+
+    });
 
     console.log("nodes", nodes);
     console.log("edges", edges);
