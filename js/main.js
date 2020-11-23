@@ -114,9 +114,9 @@ function numPOSETtoGraphJSON(activityRes)
 
 function graphAdjListToGraphJSON(activityRes)
 {
-    let nodes = activityRes._graphAdjList._adjList.map(([idNode, map], index) => ({id: idNode, label: idNode, index: index}));
+    let nodes = activityRes._graphAdjList._adjList.map(([idNode, [support, map]], index) => ({id: idNode, label: `${idNode}#${support}`, index: index, support: support}));
 
-    let edges = activityRes._graphAdjList._adjList.flatMap(([idNode, map], index, arr) =>
+    let edges = activityRes._graphAdjList._adjList.flatMap(([idNode, [support, map]], index, arr) =>
     {
         let from = idNode;
 
@@ -178,6 +178,44 @@ function graphAdjListToGraphJSON(activityRes)
     let data = {
         comments: "GraphTest", nodes, edges
     };
+
+    console.log("data", data);
+    return data;
+}
+
+function graphAdjListToTreeJSON(activityRes)
+{
+    let nodes = activityRes._graphAdjList._adjList.map(([idNode, map], index) =>
+        ({
+            id: idNode,
+            children: map.map(nodeInfo => ({id: nodeInfo[0], value: nodeInfo[1], children:[]}))
+        }));
+
+    nodes.sort((node1, node2) => node1.children.length - node2.children.length);
+
+    nodes.forEach(nodeA =>
+    {
+        let nodesContainingNodeA = nodes.filter(node => node.children.map(child => child.id).includes(nodeA.id));
+        if(nodesContainingNodeA.length === 0)
+        {
+            //It's a root node!
+            nodeA.type= "rootNode";
+        }
+        else
+        {
+            nodesContainingNodeA.forEach(nodeB =>
+            {
+                //find index of the good child
+                let indexChild = nodeB.children.map(child => child.id).indexOf(nodeA.id);
+                nodeB.children[indexChild] = nodeA;
+            });
+        }
+    });
+
+    let finalNodes = nodes.filter(node => node.type === "rootNode");
+
+
+    let data = finalNodes;
 
     console.log("data", data);
     return data;
